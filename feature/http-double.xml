@@ -1,0 +1,17 @@
+<features xmlns='http://karaf.apache.org/xmlns/features/v1.3.0'>
+  <feature name='http-double-dependencies' version='0.0.1' description='http-double dependencies'>
+    <bundle>mvn:io.netty/netty-common/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-buffer/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-resolver/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-transport/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-codec/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-codec-http/4.1.0.Beta8</bundle>
+    <bundle>mvn:io.netty/netty-handler/4.1.0.Beta8</bundle>
+    <bundle>mvn:org.slf4j/slf4j-api/1.7.13</bundle>
+  </feature>
+  <feature name='http-double' version='0.0.1' description='http-double based on netty'>
+    <feature>http-double-dependencies</feature>
+    <bundle>mvn:npetzall.http.double/api/0.0.1</bundle>
+    <bundle>mvn:npetzall.http.double/server/0.0.1</bundle>
+  </feature>
+</features>

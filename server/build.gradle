@@ -1,0 +1,38 @@
+plugins {
+    id "org.sonarqube" version "1.1"
+    id 'me.champeau.gradle.jmh' version '0.2.0'
+}
+
+version '0.0.1'
+
+apply plugin: 'me.champeau.gradle.jmh'
+apply plugin: 'jacoco'
+
+dependencies {
+    compile project(':api')
+    compile 'io.netty:netty-codec-http:4.1.0.Beta8'
+    compile 'io.netty:netty-handler:4.1.0.Beta8'
+    compile 'org.slf4j:slf4j-api:1.7.13'
+    runtime 'org.apache.logging.log4j:log4j-core:2.5'
+    runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
+    runtime project(':example')
+    testCompile 'org.testng:testng:6.9.9'
+    testCompile 'org.assertj:assertj-core:3.1.0'
+    testRuntime 'org.codehaus.sonar-plugins.java:sonar-jacoco-listeners:3.2'
+}
+
+test {
+    useTestNG() {
+        listeners << 'org.sonar.java.jacoco.TestNGListener'
+    }
+    testLogging.showStandardStreams = true
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+}
+
+jacoco {
+    toolVersion = "0.7.5.201505241946"
+}
+
+test.finalizedBy jacocoTestReport

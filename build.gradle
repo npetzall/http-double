@@ -1,0 +1,25 @@
+plugins {
+    id "com.github.lburgazzoli.karaf.features" version "2.9.4"
+}
+
+apply plugin: 'idea'
+
+allprojects {
+  group 'npetzall.http.double'
+
+  repositories {
+      mavenCentral()
+  }
+}
+
+subprojects {
+  apply plugin: 'java'
+  apply plugin: 'osgi'
+
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.10'
+}

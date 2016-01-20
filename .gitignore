@@ -9,3 +9,11 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+
+#Ideal
+
+*.iml
+
+## Directory-based project format:
+.idea/
