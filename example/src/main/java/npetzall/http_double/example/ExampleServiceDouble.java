@@ -13,8 +13,8 @@ public class ExampleServiceDouble implements ServiceDouble{
     @Override
     public void configure(ServiceDoubleConfiguration serviceDoubleConfiguration) {
         serviceDoubleConfiguration
-            .setName("Example")
-            .setUrlPath("/example")
+            .name("Example")
+            .urlPath("/example")
             .addTemplate("reverseText", this.getClass().getResourceAsStream("/templates/reverseText.xml"))
             .addTemplate("toUpperCase", this.getClass().getResourceAsStream("/templates/toUpperCase.xml"))
             .addTemplate("getQuotationResponse", this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml"));
@@ -22,7 +22,7 @@ public class ExampleServiceDouble implements ServiceDouble{
 
     @Override
     public void processRequest(Request request, Response response) {
-        response.setTemplate("getQuotationResponse").addToken("name","Microsoft");
+        response.templateName("getQuotationResponse").addToken("name","Microsoft");
     }
 
     private void reverseText(Request request, Response response) {

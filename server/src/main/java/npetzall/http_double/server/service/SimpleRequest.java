@@ -11,23 +11,16 @@ import java.util.Map;
  */
 public class SimpleRequest implements Request {
 
-    private final long start;
-
     private String path;
     private Map<String,String> headers = new HashMap<>();
     private InputStream bodyStream;
 
-    public SimpleRequest() {
-        start = System.currentTimeMillis();
-    }
-
-    public SimpleRequest setPath(String path) {
+    public SimpleRequest path(String path) {
         this.path = path;
         return this;
     }
 
-    @Override
-    public String getPath() {
+    public String path() {
         return path;
     }
 
@@ -36,18 +29,16 @@ public class SimpleRequest implements Request {
         return this;
     }
 
-    @Override
-    public Map<String, String> getHeaders() {
+    public Map<String, String> headers() {
         return headers;
     }
 
-    public SimpleRequest setBodyStream(InputStream bodyStream) {
+    public SimpleRequest body(InputStream bodyStream) {
         this.bodyStream = bodyStream;
         return this;
     }
 
-    @Override
-    public InputStream getBody() {
+    public InputStream body() {
         return bodyStream;
     }
 }

@@ -55,7 +55,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
                 .addListener(ChannelFutureListener.CLOSE);
             }
-            request.setPath(httpRequest.uri());
+            request.path(httpRequest.uri());
             httpRequest.headers().forEach((entry) -> {
                 request.addHeader(entry.getKey(), entry.getValue());
             });
@@ -65,7 +65,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
         }
         if (msg instanceof HttpContent) {
             HttpContent httpContent = (HttpContent) msg;
-            request.setBodyStream(new ByteBufInputStream(httpContent.content()));
+            request.body(new ByteBufInputStream(httpContent.content()));
             if (msg instanceof LastHttpContent) {
                 serviceDoubleRef.getServiceDouble().processRequest(request,response);
                 write(ctx, response);
@@ -77,7 +77,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
         HttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
         httpResponse.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
         ctx.write(httpResponse);
-        HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.getTemplateName()))));
+        HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
         ctx.write(httpChunkedInput);
     }
 }

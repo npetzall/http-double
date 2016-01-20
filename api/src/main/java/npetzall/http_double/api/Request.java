@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Map;
 
 public interface Request {
-  public String getPath();
-  public Map<String,String> getHeaders();
-  public InputStream getBody();
+  public String path();
+  public Map<String,String> headers();
+  public InputStream body();
 }

@@ -13,13 +13,13 @@ public class DefaultServiceDoubleConfiguration implements ServiceDoubleConfigura
     private Map<String, InputStream> templates = new HashMap<>();
 
     @Override
-    public ServiceDoubleConfiguration setName(String name) {
+    public ServiceDoubleConfiguration name(String name) {
         this.serviceDoubleName = name;
         return this;
     }
 
     @Override
-    public ServiceDoubleConfiguration setUrlPath(String urlPath) {
+    public ServiceDoubleConfiguration urlPath(String urlPath) {
         this.urlPath = urlPath;
         return this;
     }

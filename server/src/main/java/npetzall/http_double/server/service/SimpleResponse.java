@@ -10,16 +10,25 @@ import java.util.Map;
  */
 public class SimpleResponse implements Response {
 
+    private final long start;
+
     private String templateName;
     private Map<String, String> tokenMap = new HashMap<>();
+    private long delayMin = 0;
+    private long delayMax = 0;
+    private boolean sendChunkedResponse = false;
+
+    public SimpleResponse() {
+        start = System.currentTimeMillis();
+    }
 
     @Override
-    public Response setTemplate(String templateName) {
+    public Response templateName(String templateName) {
         this.templateName = templateName;
         return this;
     }
 
-    public String getTemplateName() {
+    public String templateName() {
         return templateName;
     }
 
@@ -31,5 +40,37 @@ public class SimpleResponse implements Response {
 
     public Map<String,String> getTokens() {
         return tokenMap;
+    }
+
+    @Override
+    public Response delay(long delay) {
+        delayMin = delay;
+        delayMax = delay;
+        return this;
+    }
+
+    @Override
+    public Response delay(long min, long max) {
+        delayMin = min;
+        delayMax = max;
+        return this;
+    }
+
+    public long delayMin() {
+        return delayMin;
+    }
+
+    public long delayMax() {
+        return delayMax;
+    }
+
+    @Override
+    public Response sendChunked(boolean shouldSendChunked) {
+        sendChunkedResponse = shouldSendChunked;
+        return this;
+    }
+
+    public boolean sendChunkedResponse() {
+        return sendChunkedResponse;
     }
 }
