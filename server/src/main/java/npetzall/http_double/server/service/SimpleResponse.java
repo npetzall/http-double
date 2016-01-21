@@ -5,6 +5,7 @@ import npetzall.http_double.api.Response;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by nosse on 2016-01-18.
@@ -18,7 +19,7 @@ public class SimpleResponse implements Response {
     private AsciiString contentType;
     private boolean sendChunkedResponse = false;
     private long delayMin = 0;
-    private long delayMax = 0;
+    private long delayMax = 1;
 
     public SimpleResponse() {
         startTime = System.currentTimeMillis();
@@ -71,18 +72,18 @@ public class SimpleResponse implements Response {
     @Override
     public Response delay(long delay) {
         delayMin = delay;
-        delayMax = delay;
+        delayMax = delay+1;
         return this;
     }
 
     @Override
     public Response delay(long min, long max) {
         delayMin = min;
-        delayMax = max;
+        delayMax = max+1;
         return this;
     }
 
     public long delay() {
-        return 1L;
+        return Math.max(0L, ThreadLocalRandom.current().nextLong(delayMin,delayMax) - (System.currentTimeMillis() - startTime));
     }
 }
