@@ -16,7 +16,6 @@ import npetzall.http_double.server.service.SimpleResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +26,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
-    private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(100);
+    private final ScheduledExecutorService scheduledExecutorService;
 
     private final ServiceDoubleRegistry serviceDoubleRegistry;
     private final TemplateService templateService;
@@ -37,9 +36,12 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     private ServiceDoubleRef serviceDoubleRef;
 
-    public ClientHandler(ServiceDoubleRegistry serviceDoubleRegistry, TemplateService templateService) {
+    public ClientHandler(ServiceDoubleRegistry serviceDoubleRegistry,
+                         TemplateService templateService,
+                         ScheduledExecutorService scheduledExecutorService) {
         this.serviceDoubleRegistry = serviceDoubleRegistry;
         this.templateService = templateService;
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
     @Override

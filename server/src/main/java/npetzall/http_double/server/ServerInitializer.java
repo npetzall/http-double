@@ -11,6 +11,8 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import npetzall.http_double.api.TemplateService;
 import npetzall.http_double.server.registry.ServiceDoubleRegistry;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 /**
  * Created by nosse on 2016-01-18.
  */
@@ -19,13 +21,16 @@ public class ServerInitializer extends ChannelInitializer<SocketChannel> {
     private final SslContext sslContext;
     private final ServiceDoubleRegistry serviceDoubleRegistry;
     private final TemplateService templateService;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     public ServerInitializer(SslContext sslContext,
                              ServiceDoubleRegistry serviceDoubleRegistry,
-                             TemplateService templateService) {
+                             TemplateService templateService,
+                             ScheduledExecutorService scheduledExecutorService) {
         this.sslContext = sslContext;
         this.serviceDoubleRegistry = serviceDoubleRegistry;
         this.templateService = templateService;
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
     @Override
@@ -40,7 +45,7 @@ public class ServerInitializer extends ChannelInitializer<SocketChannel> {
         channelPipeline.addLast(new HttpResponseEncoder());
         channelPipeline.addLast(new ChunkedWriteHandler());
         //channelPipeline.addLast(new HttpContentCompressor());
-        channelPipeline.addLast(new ClientHandler(serviceDoubleRegistry, templateService));
+        channelPipeline.addLast(new ClientHandler(serviceDoubleRegistry, templateService, scheduledExecutorService));
 
     }
 }
