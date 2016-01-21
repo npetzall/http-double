@@ -3,7 +3,6 @@ package npetzall.http_double.server;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
@@ -40,7 +39,7 @@ public class ServerInitializer extends ChannelInitializer<SocketChannel> {
         channelPipeline.addLast(new HttpRequestDecoder());
         channelPipeline.addLast(new HttpResponseEncoder());
         channelPipeline.addLast(new ChunkedWriteHandler());
-        channelPipeline.addLast(new HttpContentCompressor());
+        //channelPipeline.addLast(new HttpContentCompressor());
         channelPipeline.addLast(new ClientHandler(serviceDoubleRegistry, templateService));
 
     }

@@ -1,6 +1,7 @@
 package npetzall.http_double.server;
 
 import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -13,25 +14,26 @@ import npetzall.http_double.server.registry.ServiceDoubleRegistry;
 import npetzall.http_double.server.service.SimpleRequest;
 import npetzall.http_double.server.service.SimpleResponse;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 
 public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
-    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(100);
+    private static final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(100);
 
     private final ServiceDoubleRegistry serviceDoubleRegistry;
     private final TemplateService templateService;
 
     private SimpleRequest request;
-    private SimpleResponse response = new SimpleResponse();
+    private SimpleResponse response;
 
     private ServiceDoubleRef serviceDoubleRef;
 
@@ -49,12 +51,14 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
         if (msg instanceof HttpRequest) {
             request = new SimpleRequest();
+            response = new SimpleResponse();
             HttpRequest httpRequest = (HttpRequest)msg;
             serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(httpRequest.uri());
             if (serviceDoubleRef == null) {
                 ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
                 .addListener(ChannelFutureListener.CLOSE);
             }
+            request.shouldKeepAlive(HttpUtil.isKeepAlive(httpRequest));
             request.path(httpRequest.uri());
             httpRequest.headers().forEach((entry) -> {
                 request.addHeader(entry.getKey(), entry.getValue());
@@ -68,16 +72,69 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
             request.body(new ByteBufInputStream(httpContent.content()));
             if (msg instanceof LastHttpContent) {
                 serviceDoubleRef.getServiceDouble().processRequest(request,response);
-                write(ctx, response);
+                if (response.sendChunkedResponse()) {
+                    chunkedResponse(ctx, response);
+                } else {
+                    fullResponse(ctx, response);
+                }
             }
         }
     }
 
-    private void write(ChannelHandlerContext ctx, SimpleResponse response) {
-        HttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
-        httpResponse.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-        ctx.write(httpResponse);
-        HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
-        ctx.write(httpChunkedInput);
+    private void chunkedResponse(final ChannelHandlerContext ctx, final SimpleResponse response) {
+        scheduledExecutorService.schedule((Runnable)() -> {
+            HttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
+            httpResponse.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
+            setKeepAlive(httpResponse);
+            ctx.write(httpResponse);
+            HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
+            ctx.write(httpChunkedInput);
+            shouldClose(ctx);
+        }, response.delay(), TimeUnit.MILLISECONDS);
+    }
+
+    private InputStream getTokenReplaceStream(SimpleResponse response) {
+        return new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()));
+    }
+
+    private void setKeepAlive(HttpResponse httpResponse) {
+        if (request.shouldKeepAlive()) {
+            HttpUtil.setKeepAlive(httpResponse, request.shouldKeepAlive());
+        }
+    }
+
+    private void shouldClose(ChannelHandlerContext ctx) {
+        if (shouldClose()) {
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.flush();
+        }
+    }
+
+    private boolean shouldClose() {
+        return !request.shouldKeepAlive();
+    }
+
+    private void fullResponse(final ChannelHandlerContext ctx, final SimpleResponse response) throws IOException {
+        final long contentLength = lengthOfStream(getTokenReplaceStream(response));
+        scheduledExecutorService.schedule((Runnable)() -> {
+            DefaultHttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
+            httpResponse.headers().add(HttpHeaderNames.CONTENT_LENGTH, contentLength);
+            setKeepAlive(httpResponse);
+            ctx.write(httpResponse);
+            ctx.write(new ChunkedStream(getTokenReplaceStream(response)));
+            ctx.write(new DefaultLastHttpContent());
+            shouldClose(ctx);
+        }, response.delay(), TimeUnit.MILLISECONDS);
+    }
+
+    private long lengthOfStream(InputStream inputStream) throws IOException {
+        byte[] readBuff = new byte[1024];
+        long size = 0;
+        int numberRead;
+        while((numberRead = inputStream.read(readBuff)) != -1) {
+            size += numberRead;
+        }
+        return size;
     }
 }

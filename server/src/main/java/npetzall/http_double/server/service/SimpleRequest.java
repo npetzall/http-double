@@ -11,9 +11,19 @@ import java.util.Map;
  */
 public class SimpleRequest implements Request {
 
+    private boolean keepAlive;
+
     private String path;
     private Map<String,String> headers = new HashMap<>();
     private InputStream bodyStream;
+
+    public void shouldKeepAlive(boolean shouldKeepAlive) {
+        this.keepAlive = shouldKeepAlive;
+    }
+
+    public boolean shouldKeepAlive() {
+        return keepAlive;
+    }
 
     public SimpleRequest path(String path) {
         this.path = path;

@@ -16,6 +16,7 @@ public class ByteBufferInputStream extends InputStream {
         }
     }
 
+    @Override
     public int read() throws IOException {
         if (!byteBuffer.hasRemaining()) {
             return -1;
@@ -23,6 +24,7 @@ public class ByteBufferInputStream extends InputStream {
         return byteBuffer.get() & 0xFF;
     }
 
+    @Override
     public int read(byte[] bytes, int off, int len)
             throws IOException {
         if (!byteBuffer.hasRemaining()) {
@@ -38,4 +40,5 @@ public class ByteBufferInputStream extends InputStream {
     public int available() throws IOException {
         return byteBuffer.remaining();
     }
+
 }
