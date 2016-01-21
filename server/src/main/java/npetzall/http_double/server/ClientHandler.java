@@ -86,6 +86,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
             HttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
             httpResponse.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
             setKeepAlive(httpResponse);
+            if (response.contentType() != null) {
+                httpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, response.contentType());
+            }
             ctx.write(httpResponse);
             HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
             ctx.write(httpChunkedInput);
@@ -120,6 +123,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
         scheduledExecutorService.schedule((Runnable)() -> {
             DefaultHttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
             httpResponse.headers().add(HttpHeaderNames.CONTENT_LENGTH, contentLength);
+            if (response.contentType() != null) {
+                httpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, response.contentType());
+            }
             setKeepAlive(httpResponse);
             ctx.write(httpResponse);
             ctx.write(new ChunkedStream(getTokenReplaceStream(response)));

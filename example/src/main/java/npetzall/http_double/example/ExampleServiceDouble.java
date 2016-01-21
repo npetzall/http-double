@@ -22,7 +22,11 @@ public class ExampleServiceDouble implements ServiceDouble{
 
     @Override
     public void processRequest(Request request, Response response) {
-        response.templateName("getQuotationResponse").addToken("name","Microsoft");
+        response
+                .templateName("getQuotationResponse")
+                .contentType("text/xml")
+                .addToken("name","Microsoft");
+
     }
 
     private void reverseText(Request request, Response response) {
