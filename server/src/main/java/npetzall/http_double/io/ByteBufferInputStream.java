@@ -9,11 +9,11 @@ public class ByteBufferInputStream extends InputStream {
     private final ByteBuffer byteBuffer;
 
     public ByteBufferInputStream(ByteBuffer byteBuffer) {
-        this.byteBuffer = byteBuffer.duplicate();
-        this.byteBuffer.rewind();
         if (byteBuffer == null) {
             throw new IllegalArgumentException("ByteBuffer can't be null");
         }
+        this.byteBuffer = byteBuffer.duplicate();
+        this.byteBuffer.rewind();
     }
 
     @Override

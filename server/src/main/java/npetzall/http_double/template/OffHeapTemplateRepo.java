@@ -21,7 +21,7 @@ public class OffHeapTemplateRepo implements TemplateService {
             ByteBuffer byteBuffer  = createByteBuffer(template);
             templates.put(asKey(serviceDoubleName, templateName), byteBuffer);
         } catch (Exception e) {
-
+            throw new RuntimeException("Failed to store template in OffHeapTemplateRepo",e);
         }
     }
 
