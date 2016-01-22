@@ -9,6 +9,14 @@ version '0.0.1'
 apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'jacoco'
 
+sourceSets {
+    test {
+        scala {
+            srcDirs = ['src/gatling/simulations']
+        }
+    }
+}
+
 dependencies {
     compile project(':api')
     compile 'io.netty:netty-codec-http:4.1.0.Beta8'
@@ -39,3 +47,7 @@ jacoco {
 }
 
 test.finalizedBy jacocoTestReport
+
+jmh {
+    jmhVersion = '1.11.3'
+}
