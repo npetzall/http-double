@@ -1,5 +1,6 @@
 package npetzall.http_double.server.registry;
 
+@FunctionalInterface
 public interface ServiceDoubleRegistry {
-    public ServiceDoubleRef getServiceDoubleByURLPath(String urlPath);
+    ServiceDoubleRef getServiceDoubleByURLPath(String urlPath);
 }

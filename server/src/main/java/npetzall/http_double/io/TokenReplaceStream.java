@@ -7,9 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Created by nosse on 2016-01-19.
- */
 public class TokenReplaceStream extends InputStream {
 
     private static final String PRE_FIX = "${";

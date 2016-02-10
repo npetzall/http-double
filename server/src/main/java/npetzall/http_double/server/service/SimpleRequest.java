@@ -6,9 +6,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by nosse on 2016-01-18.
- */
 public class SimpleRequest implements Request {
 
     private boolean keepAlive;

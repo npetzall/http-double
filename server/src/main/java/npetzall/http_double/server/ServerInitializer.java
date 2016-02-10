@@ -13,9 +13,6 @@ import npetzall.http_double.server.registry.ServiceDoubleRegistry;
 
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * Created by nosse on 2016-01-18.
- */
 public class ServerInitializer extends ChannelInitializer<SocketChannel> {
 
     private final SslContext sslContext;

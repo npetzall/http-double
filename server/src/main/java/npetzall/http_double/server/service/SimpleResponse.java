@@ -7,9 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Created by nosse on 2016-01-18.
- */
 public class SimpleResponse implements Response {
 
     private final long startTime;
