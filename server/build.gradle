@@ -4,10 +4,16 @@ plugins {
     id "com.github.lkishalmi.gatling" version "0.1.1"
 }
 
-version '0.0.1'
 
 apply plugin: 'me.champeau.gradle.jmh'
 apply plugin: 'jacoco'
+apply plugin: 'application'
+
+version '0.0.1'
+applicationName = 'http-double'
+mainClassName = "npetzall.http_double.server.CmdLauncher"
+startScripts.unixStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.sh.txt"))
+startScripts.windowsStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.bat.txt"))
 
 sourceSets {
     test {

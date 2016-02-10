@@ -1,7 +1,3 @@
-plugins {
-    id "com.github.lburgazzoli.karaf.features" version "2.9.4"
-}
-
 apply plugin: 'idea'
 
 allprojects {
