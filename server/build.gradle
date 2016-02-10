@@ -14,6 +14,8 @@ applicationName = 'http-double'
 mainClassName = "npetzall.http_double.server.CmdLauncher"
 startScripts.unixStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.sh.txt"))
 startScripts.windowsStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.bat.txt"))
+distTar.exclude('**/example.jar')
+distZip.exclude('**/example.jar')
 
 sourceSets {
     test {
