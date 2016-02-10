@@ -1,10 +1,15 @@
 apply plugin: 'idea'
 
 allprojects {
-  group 'npetzall.http.double'
+  group 'npetzall.http-double'
 
   repositories {
-      mavenCentral()
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url  "http://dl.bintray.com/npetzall/maven"
+    }
+    jcenter()
   }
 }
 

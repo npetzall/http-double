@@ -1,0 +1,24 @@
+package npetzall.httpdouble.server;
+
+import npetzall.httpdouble.api.TemplateService;
+import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
+import npetzall.httpdouble.server.registry.ServiceLoaderBackedRegistry;
+import npetzall.httpdouble.template.OffHeapTemplateRepo;
+
+import java.io.IOException;
+
+public class CmdLauncher {
+
+    public static void main(String[] args) throws IOException {
+        HttpDoubleServer httpDoubleServer = new HttpDoubleServer();
+        TemplateService templateService = new OffHeapTemplateRepo();
+        ServiceDoubleRegistry serviceDoubleRegistry = new ServiceLoaderBackedRegistry(templateService);
+        httpDoubleServer.setTemplateService(templateService);
+        httpDoubleServer.setServiceDoubleRegistry(serviceDoubleRegistry);
+        httpDoubleServer.start();
+        System.err.println("Server listening on port 3000, with no SSL\nPress enter/return to shutdown");
+        System.in.read();
+        httpDoubleServer.stop();
+
+    }
+}

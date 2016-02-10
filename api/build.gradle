@@ -1,1 +1,33 @@
-version '0.0.1'
+plugins {
+    id "com.jfrog.bintray" version "1.6"
+}
+
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+version '0.0.2'
+
+publishing {
+    publications {
+        api(MavenPublication) {
+            from components.java
+            artifactId 'http-double-api'
+        }
+    }
+}
+
+bintray {
+    user = bintrayUser
+    key = bintrayKey
+    publications = ['api']
+    pkg {
+        repo = 'maven'
+        name = 'http-double'
+        desc = 'API/SPI for implementing a double service'
+        licenses = ['MIT']
+        websiteUrl = 'https://github.com/npetzall/http-double'
+        issueTrackerUrl = 'https://github.com/npetzall/http-double/issues'
+        vcsUrl = 'https://github.com/npetzall/http-double.git'
+        githubRepo = 'npetzall/http-double'
+    }
+}
