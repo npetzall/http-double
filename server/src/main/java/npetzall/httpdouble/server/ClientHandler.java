@@ -57,30 +57,41 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
             HttpRequest httpRequest = (HttpRequest)msg;
             serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(httpRequest.uri());
             if (serviceDoubleRef == null) {
-                ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
-                .addListener(ChannelFutureListener.CLOSE);
+                notFound(ctx);
             }
             request.shouldKeepAlive(HttpUtil.isKeepAlive(httpRequest));
             request.path(httpRequest.uri());
-            httpRequest.headers().forEach((entry) -> {
-                request.addHeader(entry.getKey(), entry.getValue());
-            });
+            request.method(httpRequest.method().name());
+            httpRequest.headers().forEach(entry ->
+                request.addHeader(entry.getKey(), entry.getValue())
+            );
             if (HttpUtil.is100ContinueExpected(httpRequest)) {
                 ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
             }
         }
         if (msg instanceof HttpContent) {
             HttpContent httpContent = (HttpContent) msg;
-            request.body(new ByteBufInputStream(httpContent.content()));
+            if(httpContent.content().isReadable()) {
+                request.body(new ByteBufInputStream(httpContent.content()));
+            }
             if (msg instanceof LastHttpContent) {
                 serviceDoubleRef.getServiceDouble().processRequest(request,response);
-                if (response.sendChunkedResponse()) {
-                    chunkedResponse(ctx, response);
+                if (response.templateName() == null || response.templateName().isEmpty()) {
+                    notFound(ctx);
                 } else {
-                    fullResponse(ctx, response);
+                    if (response.sendChunkedResponse()) {
+                        chunkedResponse(ctx, response);
+                    } else {
+                        fullResponse(ctx, response);
+                    }
                 }
             }
         }
+    }
+
+    private static void notFound(ChannelHandlerContext ctx) {
+        ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
+                .addListener(ChannelFutureListener.CLOSE);
     }
 
     private void chunkedResponse(final ChannelHandlerContext ctx, final SimpleResponse response) {
@@ -136,7 +147,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
         }, response.delay(), TimeUnit.MILLISECONDS);
     }
 
-    private long lengthOfStream(InputStream inputStream) throws IOException {
+    private static long lengthOfStream(InputStream inputStream) throws IOException {
         byte[] readBuff = new byte[1024];
         long size = 0;
         int numberRead;

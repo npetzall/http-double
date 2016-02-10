@@ -27,6 +27,10 @@ public class HttpDoubleServer {
 
     private boolean running = false;
 
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
+    private Channel channel;
+
     public void setTemplateService(TemplateService templateService) {
         this.templateService = templateService;
     }
@@ -46,10 +50,6 @@ public class HttpDoubleServer {
     public void setNumberOfSchedulerThreads(int numberOfSchedulerThreads) {
         this.numberOfSchedulerThreads = numberOfSchedulerThreads;
     }
-
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
-    private Channel channel;
 
     public void start() {
         validate();
@@ -74,7 +74,7 @@ public class HttpDoubleServer {
 
                 running = true;
             } catch (Exception e) {
-                throw new RuntimeException("Unable to start", e);
+                throw new HttpDoubleServerException("Unable to start", e);
             }
         }
     }
@@ -105,8 +105,6 @@ public class HttpDoubleServer {
             }
             scheduledExecutorService.shutdown();
             scheduledExecutorService = null;
-            System.gc();
-            System.runFinalization();
             running = false;
         }
     }

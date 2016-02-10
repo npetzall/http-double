@@ -11,8 +11,9 @@ public class SimpleRequest implements Request {
     private boolean keepAlive;
 
     private String path;
+    private String method;
     private Map<String,String> headers = new HashMap<>();
-    private InputStream bodyStream;
+    private InputStream bodyStream = null;
 
     public void shouldKeepAlive(boolean shouldKeepAlive) {
         this.keepAlive = shouldKeepAlive;
@@ -27,8 +28,19 @@ public class SimpleRequest implements Request {
         return this;
     }
 
+    @Override
     public String path() {
         return path;
+    }
+
+    public SimpleRequest method(String method) {
+        this.method = method;
+        return this;
+    }
+
+    @Override
+    public String method() {
+        return method;
     }
 
     public SimpleRequest addHeader(String name, String value) {
@@ -36,15 +48,18 @@ public class SimpleRequest implements Request {
         return this;
     }
 
+    @Override
     public Map<String, String> headers() {
         return headers;
     }
+
 
     public SimpleRequest body(InputStream bodyStream) {
         this.bodyStream = bodyStream;
         return this;
     }
 
+    @Override
     public InputStream body() {
         return bodyStream;
     }

@@ -18,19 +18,19 @@ public class ServiceLoaderBackedRegistry implements ServiceDoubleRegistry {
 
     public ServiceLoaderBackedRegistry(TemplateService templateService) {
         this.templateService = templateService;
-        serviceLoader.iterator().forEachRemaining((serviceDouble -> {
+        serviceLoader.iterator().forEachRemaining(serviceDouble -> {
             DefaultServiceDoubleConfiguration serviceDoubleConfiguration = new DefaultServiceDoubleConfiguration();
             serviceDouble.configure(serviceDoubleConfiguration);
             urlServiceDoubleMap.put(serviceDoubleConfiguration.getUrlPath(),new ServiceDoubleRef(serviceDoubleConfiguration.getServiceDoubleName(), serviceDouble));
             addTemplatesToTemplateService(serviceDoubleConfiguration);
-        }));
+        });
     }
 
     private void addTemplatesToTemplateService(DefaultServiceDoubleConfiguration serviceDoubleConfiguration) {
         String serviceDoubleName =  serviceDoubleConfiguration.getServiceDoubleName();
-        serviceDoubleConfiguration.getTemplates().forEach((k,v) -> {
-            templateService.put(serviceDoubleName, k, v);
-        });
+        serviceDoubleConfiguration.getTemplates().forEach((k,v) ->
+            templateService.put(serviceDoubleName, k, v)
+        );
     }
 
     @Override

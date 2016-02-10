@@ -31,9 +31,9 @@ public class ByteBufferInputStream extends InputStream {
             return -1;
         }
 
-        len = Math.min(len, byteBuffer.remaining());
-        byteBuffer.get(bytes, off, len);
-        return len;
+        int length = Math.min(len, byteBuffer.remaining());
+        byteBuffer.get(bytes, off, length);
+        return length;
     }
 
     @Override
