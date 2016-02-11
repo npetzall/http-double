@@ -48,11 +48,19 @@ jmh {
     jmhVersion = '1.11.3'
 }
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
 publishing {
     publications {
         httpdouble(MavenPublication) {
             from components.java
             artifactId 'http-double-server'
+
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
 }

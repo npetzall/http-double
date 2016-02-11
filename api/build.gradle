@@ -7,11 +7,19 @@ apply plugin: 'maven-publish'
 
 version '0.0.2'
 
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+}
+
 publishing {
     publications {
         api(MavenPublication) {
             from components.java
             artifactId 'http-double-api'
+
+            artifact sourceJar {
+                classifier "sources"
+            }
         }
     }
 }
