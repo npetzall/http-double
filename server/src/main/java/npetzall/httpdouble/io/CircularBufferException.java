@@ -6,8 +6,4 @@ public class CircularBufferException extends RuntimeException {
         super(message);
     }
 
-    public CircularBufferException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
 }

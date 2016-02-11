@@ -6,43 +6,53 @@ import org.testng.annotations.Test;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Created by nosse on 2016-01-19.
- */
 public class ByteBufferInputStreamTest {
 
     private ByteBuffer byteBuffer;
-    private ByteBufferInputStream byteBufferInputStream;
 
     @Test
     public void populateByteBuffer() throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try (BufferedInputStream input = new BufferedInputStream(this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml"))) {
-            byte[] buff = new byte[1024];
-            int numberOfBytesRead;
+        byte[] data = readBytes(new BufferedInputStream(this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml")));
+        byteBuffer = ByteBuffer.allocate(data.length);
+        byteBuffer.put(data);
+        assertThat(byteBuffer.limit()).isEqualTo(data.length);
+    }
 
-            while((numberOfBytesRead = input.read(buff)) != -1) {
-                byteArrayOutputStream.write(buff, 0, numberOfBytesRead);
-            }
-            byteBuffer = ByteBuffer.allocateDirect(byteArrayOutputStream.size());
-            byteBuffer.put(byteArrayOutputStream.toByteArray());
+    private byte[] readBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byte[] buff = new byte[1024];
+        int numberOfBytesRead;
+
+        while((numberOfBytesRead = inputStream.read(buff)) != -1) {
+            byteArrayOutputStream.write(buff, 0, numberOfBytesRead);
         }
-        assertThat(byteBuffer.limit()).isEqualTo(byteArrayOutputStream.size());
+        return byteArrayOutputStream.toByteArray();
     }
 
     @Test(dependsOnMethods = "populateByteBuffer")
-    public void createInputStream() {
-        byteBufferInputStream = new ByteBufferInputStream(byteBuffer);
-        assertThat(byteBufferInputStream).isNotNull();
-    }
-
-    @Test(dependsOnMethods = "createInputStream")
     public void equalsTheResource() {
+        ByteBufferInputStream byteBufferInputStream = new ByteBufferInputStream(byteBuffer);
         BufferedInputStream input = new BufferedInputStream(this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml"));
         assertThat(byteBufferInputStream).hasSameContentAs(input);
     }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void nullConstructor() {
+        new ByteBufferInputStream(null);
+    }
+
+    @Test(dependsOnMethods = "populateByteBuffer")
+    public void readComplete() throws IOException {
+        ByteBufferInputStream byteBufferInputStream = new ByteBufferInputStream(byteBuffer);
+        byte[] data = readBytes(new BufferedInputStream(this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml")));
+        byte[] dataFromBuffer = readBytes(byteBufferInputStream);
+        assertThat(data).containsExactly(dataFromBuffer);
+        assertThat(byteBufferInputStream.read() == -1).isTrue();
+    }
+
 }

@@ -3,31 +3,58 @@ package npetzall.httpdouble.unit.io;
 import npetzall.httpdouble.io.TokenReplaceStream;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Created by nosse on 2016-01-19.
- */
 public class TokenReplaceStreamTest {
 
-    private TokenReplaceStream tokenReplaceStream;
-
     @Test
-    public void canCreate() throws IOException {
+    public void tokensAreReplaced() {
         HashMap<String,String> tokens = new HashMap<>();
         tokens.put("name","Npetzall");
-        InputStream inputStream = this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml");
-        tokenReplaceStream = new TokenReplaceStream(tokens, inputStream);
-        assertThat(tokenReplaceStream).isNotNull();
+        InputStream inputStreamTemplate = this.getClass().getResourceAsStream("/templates/getQuotationResponse.xml");
+        TokenReplaceStream tokenReplaceStream = new TokenReplaceStream(tokens, inputStreamTemplate);
+        InputStream inputStreamExpected = this.getClass().getResourceAsStream("/expected/getQuotationResponse.xml");
+        assertThat(tokenReplaceStream).hasSameContentAs(inputStreamExpected);
     }
 
-    @Test(dependsOnMethods = "canCreate")
-    public void tokensAreReplaced() {
-        InputStream inputStream = this.getClass().getResourceAsStream("/expected/getQuotationResponse.xml");
-        assertThat(tokenReplaceStream).hasSameContentAs(inputStream);
+    @Test
+    public void willWriteDollarAndCurlyBracketIfNotComplete() {
+        ByteArrayInputStream input = new ByteArrayInputStream("hej${as".getBytes(StandardCharsets.UTF_8));
+        HashMap<String,String> tokens = new HashMap<>();
+        tokens.put("name","Npetzall");
+        TokenReplaceStream tokenReplaceStream = new TokenReplaceStream(tokens, input);
+        assertThat(tokenReplaceStream).hasSameContentAs(new ByteArrayInputStream("hej${as".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void willWriteDollarAndCurlyBracketIfNotCompleteAndLonger() {
+        ByteArrayInputStream input = new ByteArrayInputStream("hej${asasdfasdfasdf".getBytes(StandardCharsets.UTF_8));
+        HashMap<String,String> tokens = new HashMap<>();
+        tokens.put("name","Npetzall");
+        TokenReplaceStream tokenReplaceStream = new TokenReplaceStream(tokens, input);
+        assertThat(tokenReplaceStream).hasSameContentAs(new ByteArrayInputStream("hej${asasdfasdfasdf".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void willKeepDollarAndCurlyBracketIfTokenDoesntExist() {
+        ByteArrayInputStream input = new ByteArrayInputStream("hej${as}".getBytes(StandardCharsets.UTF_8));
+        HashMap<String,String> tokens = new HashMap<>();
+        tokens.put("sa","Npetzall");
+        TokenReplaceStream tokenReplaceStream = new TokenReplaceStream(tokens, input);
+        assertThat(tokenReplaceStream).hasSameContentAs(new ByteArrayInputStream("hej${as}".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    public void willKeepDollar() {
+        ByteArrayInputStream input = new ByteArrayInputStream("hej$as".getBytes(StandardCharsets.UTF_8));
+        HashMap<String,String> tokens = new HashMap<>();
+        tokens.put("sa","Npetzall");
+        TokenReplaceStream tokenReplaceStream = new TokenReplaceStream(tokens, input);
+        assertThat(tokenReplaceStream).hasSameContentAs(new ByteArrayInputStream("hej$as".getBytes(StandardCharsets.UTF_8)));
     }
 }
