@@ -1,12 +1,14 @@
 #!/bin/sh
 
-if [ "\$JAVA_DEBUG" == "true" ]; then
+if [ "\$JAVA_DEBUG" = "true" ]
+then
   JAVA_DEBUG="-Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=\${HOSTNAME}:8787"
 else
   JAVA_DEBUG=""
 fi
 
-if [ "\$JAVA_JMX" == "true" ]; then
+if [ "\$JAVA_JMX" = "true" ]
+then
   JAVA_JMX="-Dcom.sun.management.jmxremote=true"
   JAVA_JMX="\$JAVA_JMX -Dcom.sun.management.jmxremote.authenticate=false"
   JAVA_JMX="\$JAVA_JMX -Dcom.sun.management.jmxremote.port=\${JMX_PORT:-9999}"
@@ -18,26 +20,36 @@ else
   JAVA_JMX=""
 fi
 
-if [ -n \$JAVA_MIN_HEAP ]; then
+if [ -n \$JAVA_MIN_HEAP ]
+then
   JAVA_MIN_HEAP="-Xms\${JAVA_MIN_HEAP:-512m}"
 fi
 
-if [ -n \$JAVA_MAX_HEAP ]; then
+if [ -n \$JAVA_MAX_HEAP ]
+then
   JAVA_MAX_HEAP="-Xmx\${JAVA_MAX_HEAP:-512m}"
 fi
 
 JAVA_GC="-XX:MaxGCPauseMillis=100"
 
-if [ "\$LOG_GC" == "true" ]; then
+if [ "\$LOG_GC" = "true" ]
+then
   JAVA_GC="\$JAVA_GC -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:../log/gclog.txt"
 fi
 
-if [ "\$GC_G1" == "true" ]; then
+if [ "\$GC_G1" = "true" ]
+then
   JAVA_GC="\$JAVA_GC -XX:+UseG1GC"
 fi
 
-if [ "\$GC_PARALLEL" == "true" ]; then
+if [ "\$GC_PARALLEL" = "true" ]
+then
   JAVA_GC="\$JAVA_GC -XX:+UseParallelGC"
 fi
 
-exec java \$JAVA_DEBUG \$JAVA_JMX \$JAVA_MIN_HEAP \$JAVA_MAX_HEAP \$JAVA_GC -classpath "../lib/*" ${mainClassName}
+if [ "x\$LOGCONF" = "x" ]
+then
+   LOGCONF="../conf/log4j2.xml"
+fi
+
+exec java \$JAVA_DEBUG \$JAVA_JMX \$JAVA_MIN_HEAP \$JAVA_MAX_HEAP \$JAVA_GC -Dlog4j.configurationFile=\$LOGCONF -classpath "../lib/*" ${mainClassName} "\$@"

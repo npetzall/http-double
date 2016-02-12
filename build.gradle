@@ -23,6 +23,9 @@ subprojects {
 
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
+
+  jar.appendix jar.baseName
+  jar.baseName "http-double"
 }
 
 task wrapper(type: Wrapper) {
