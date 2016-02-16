@@ -23,7 +23,7 @@ public class CmdLauncher {
         try {
             parser.parseArgument(args);
         } catch (CmdLineException cmdEx) {
-            log.error(cmdEx.getMessage());
+            log.error("Parse arguments failed",cmdEx);
             parser.printUsage(System.out);
             System.exit(666);
         }

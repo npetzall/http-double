@@ -24,7 +24,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 
-public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
+public class ClientHandlerFullHttpRequest extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
@@ -36,9 +36,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     private ServiceDoubleRef serviceDoubleRef;
 
-    public ClientHandler(ServiceDoubleRegistry serviceDoubleRegistry,
-                         TemplateService templateService,
-                         ScheduledExecutorService scheduledExecutorService) {
+    public ClientHandlerFullHttpRequest(ServiceDoubleRegistry serviceDoubleRegistry,
+                                        TemplateService templateService,
+                                        ScheduledExecutorService scheduledExecutorService) {
         this.serviceDoubleRegistry = serviceDoubleRegistry;
         this.templateService = templateService;
         this.scheduledExecutorService = scheduledExecutorService;
@@ -50,40 +50,30 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
-        if (msg instanceof HttpRequest) {
-            request = new SimpleRequest();
-            response = new SimpleResponse();
-            HttpRequest httpRequest = (HttpRequest)msg;
-            serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(httpRequest.uri());
-            if (serviceDoubleRef == null) {
-                notFound(ctx);
-            }
-            request.shouldKeepAlive(HttpUtil.isKeepAlive(httpRequest));
-            request.path(httpRequest.uri());
-            request.method(httpRequest.method().name());
-            addHeadersToRequest(httpRequest.headers(), request);
-            if (HttpUtil.is100ContinueExpected(httpRequest)) {
-                ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
-            }
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest) throws Exception {
+        request = new SimpleRequest();
+        response = new SimpleResponse();
+        serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(fullHttpRequest.uri());
+        if (serviceDoubleRef == null) {
+            notFound(ctx);
         }
-        if (msg instanceof HttpContent) {
-            HttpContent httpContent = (HttpContent) msg;
-            if(httpContent.content().isReadable()) {
-                request.body(new ByteBufInputStream(httpContent.content()));
-            }
-            if (msg instanceof LastHttpContent) {
-                addHeadersToRequest(((LastHttpContent)msg).trailingHeaders(), request);
-                serviceDoubleRef.getServiceDouble().processRequest(request,response);
-                if (response.templateName() == null || response.templateName().isEmpty()) {
-                    notFound(ctx);
-                } else {
-                    if (response.sendChunkedResponse()) {
-                        chunkedResponse(ctx, response);
-                    } else {
-                        fullResponse(ctx, response);
-                    }
-                }
+        request.shouldKeepAlive(HttpUtil.isKeepAlive(fullHttpRequest));
+        request.path(fullHttpRequest.uri());
+        request.method(fullHttpRequest.method().name());
+        addHeadersToRequest(fullHttpRequest.headers(), request);
+        addHeadersToRequest(fullHttpRequest.trailingHeaders(), request);
+
+        if(fullHttpRequest.content().isReadable()) {
+            request.body(new ByteBufInputStream(fullHttpRequest.content()));
+        }
+        serviceDoubleRef.getServiceDouble().processRequest(request,response);
+        if (response.templateName() == null || response.templateName().isEmpty()) {
+            notFound(ctx);
+        } else {
+            if (response.sendChunkedResponse()) {
+                chunkedResponse(ctx, response);
+            } else {
+                fullResponse(ctx, response);
             }
         }
     }

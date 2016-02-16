@@ -1,4 +1,4 @@
-package npetzall.httpdouble.unit.service;
+package npetzall.httpdouble.unit.server.service;
 
 import npetzall.httpdouble.server.service.SimpleResponse;
 import org.testng.annotations.Test;

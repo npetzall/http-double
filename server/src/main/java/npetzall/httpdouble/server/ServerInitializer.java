@@ -4,6 +4,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpContentDecompressor;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.ssl.SslContext;
@@ -39,6 +40,7 @@ public class ServerInitializer extends ChannelInitializer<SocketChannel> {
         }
         channelPipeline.addLast(new HttpContentDecompressor());
         channelPipeline.addLast(new HttpRequestDecoder());
+        channelPipeline.addLast(new HttpObjectAggregator(1048576));
         channelPipeline.addLast(new HttpResponseEncoder());
         channelPipeline.addLast(new ChunkedWriteHandler());
         //channelPipeline.addLast(new HttpContentCompressor());
