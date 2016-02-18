@@ -7,7 +7,7 @@ import npetzall.httpdouble.api.ServiceDoubleConfiguration;
 
 import java.io.InputStreamReader;
 
-public class ServiceDoubleDouble implements ServiceDouble {
+public class RecordingBodyServiceDouble implements ServiceDouble {
 
     private StringBuilder stringBuilder = new StringBuilder();
 
