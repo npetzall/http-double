@@ -8,7 +8,7 @@ apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-version '0.0.4'
+version '0.0.5'
 
 applicationName = 'http-double'
 mainClassName = "npetzall.httpdouble.server.CmdLauncher"

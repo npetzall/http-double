@@ -32,7 +32,6 @@ public class SingleValueServiceDouble implements ServiceDouble {
         if ("PUT".equals(request.method())) {
             response.sendChunked(false);
         }
-
     }
 
     private String readInputStreamToString(InputStream inputStream) {

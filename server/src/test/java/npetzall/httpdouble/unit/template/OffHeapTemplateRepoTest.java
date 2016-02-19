@@ -2,6 +2,7 @@ package npetzall.httpdouble.unit.template;
 
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.template.OffHeapTemplateRepo;
+import npetzall.httpdouble.template.OffHeapTemplateRepoException;
 import org.testng.annotations.Test;
 
 import java.io.InputStream;
@@ -32,5 +33,11 @@ public class OffHeapTemplateRepoTest {
 
         assertThat(retrived).hasSameContentAs(expected);
 
+    }
+
+    @Test(expectedExceptions = OffHeapTemplateRepoException.class)
+    public void cantStoreNull() {
+        TemplateService templateService = new OffHeapTemplateRepo();
+        templateService.put("","", null);
     }
 }

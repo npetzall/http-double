@@ -4,44 +4,32 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.stream.ChunkedStream;
 import npetzall.httpdouble.api.TemplateService;
-import npetzall.httpdouble.io.TokenReplaceStream;
-import npetzall.httpdouble.server.registry.ServiceDoubleRef;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 import npetzall.httpdouble.server.service.SimpleRequest;
 import npetzall.httpdouble.server.service.SimpleResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
+import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 
-public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
+public class ClientHandler extends BaseClientHandler<HttpObject> {
 
-    private final ScheduledExecutorService scheduledExecutorService;
-
-    private final ServiceDoubleRegistry serviceDoubleRegistry;
-    private final TemplateService templateService;
-
-    private SimpleRequest request;
-    private SimpleResponse response;
-
-    private ServiceDoubleRef serviceDoubleRef;
+    private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
     public ClientHandler(ServiceDoubleRegistry serviceDoubleRegistry,
                          TemplateService templateService,
                          ScheduledExecutorService scheduledExecutorService) {
-        this.serviceDoubleRegistry = serviceDoubleRegistry;
-        this.templateService = templateService;
-        this.scheduledExecutorService = scheduledExecutorService;
+        super(serviceDoubleRegistry, templateService, scheduledExecutorService);
     }
 
     @Override
@@ -51,6 +39,24 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+        try {
+            handleRequestHeader(ctx, msg);
+            handleRequestContent(ctx, msg);
+        } catch (Exception e) {
+            log.error("Faild on request from: " + getRemoteAddress(ctx), e);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(byteArrayOutputStream));
+            DefaultFullHttpResponse response = new DefaultFullHttpResponse(
+                    HTTP_1_1,
+                    INTERNAL_SERVER_ERROR,
+                    Unpooled.wrappedBuffer(byteArrayOutputStream.toByteArray()));
+            response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+            ctx.writeAndFlush(response)
+                    .addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private void handleRequestHeader(ChannelHandlerContext ctx, HttpObject msg) {
         if (msg instanceof HttpRequest) {
             request = new SimpleRequest();
             response = new SimpleResponse();
@@ -58,6 +64,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
             serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(httpRequest.uri());
             if (serviceDoubleRef == null) {
                 notFound(ctx);
+               return;
             }
             request.shouldKeepAlive(HttpUtil.isKeepAlive(httpRequest));
             request.path(httpRequest.uri());
@@ -67,96 +74,38 @@ public class ClientHandler extends SimpleChannelInboundHandler<HttpObject> {
                 ctx.write(new DefaultFullHttpResponse(HTTP_1_1, CONTINUE));
             }
         }
+    }
+
+    private void handleRequestContent(ChannelHandlerContext ctx, HttpObject msg) throws IOException {
+        if (serviceDoubleRef == null) {
+            return;
+        }
         if (msg instanceof HttpContent) {
             HttpContent httpContent = (HttpContent) msg;
             if(httpContent.content().isReadable()) {
                 request.body(new ByteBufInputStream(httpContent.content()));
             }
-            if (msg instanceof LastHttpContent) {
-                addHeadersToRequest(((LastHttpContent)msg).trailingHeaders(), request);
-                serviceDoubleRef.getServiceDouble().processRequest(request,response);
-                if (response.templateName() == null || response.templateName().isEmpty()) {
-                    notFound(ctx);
+            handleLastContent(ctx, msg);
+        }
+    }
+
+    private void handleLastContent(ChannelHandlerContext ctx, HttpObject msg) throws IOException {
+        if (serviceDoubleRef == null) {
+            return;
+        }
+        if (msg instanceof LastHttpContent) {
+            addHeadersToRequest(((LastHttpContent)msg).trailingHeaders(), request);
+            serviceDoubleRef.getServiceDouble().processRequest(request,response);
+            if (response.templateName() == null || response.templateName().isEmpty()) {
+                notFound(ctx);
+                return;
+            } else {
+                if (response.sendChunkedResponse()) {
+                    chunkedResponse(ctx, response);
                 } else {
-                    if (response.sendChunkedResponse()) {
-                        chunkedResponse(ctx, response);
-                    } else {
-                        fullResponse(ctx, response);
-                    }
+                    fullResponse(ctx, response);
                 }
             }
         }
-    }
-
-    private static void notFound(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
-                .addListener(ChannelFutureListener.CLOSE);
-    }
-
-    private static void addHeadersToRequest(HttpHeaders httpHeaders, SimpleRequest request) {
-        httpHeaders.forEach(entry -> request.addHeader(entry.getKey(), entry.getValue()));
-    }
-
-    private void chunkedResponse(final ChannelHandlerContext ctx, final SimpleResponse response) {
-        scheduledExecutorService.schedule((Runnable)() -> {
-            HttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
-            httpResponse.headers().set(HttpHeaderNames.TRANSFER_ENCODING, HttpHeaderValues.CHUNKED);
-            setKeepAlive(httpResponse);
-            if (response.contentType() != null) {
-                httpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, response.contentType());
-            }
-            ctx.write(httpResponse);
-            HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
-            ctx.write(httpChunkedInput);
-            shouldClose(ctx);
-        }, response.delay(), TimeUnit.MILLISECONDS);
-    }
-
-    private InputStream getTokenReplaceStream(SimpleResponse response) {
-        return new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()));
-    }
-
-    private void setKeepAlive(HttpResponse httpResponse) {
-        if (request.shouldKeepAlive()) {
-            HttpUtil.setKeepAlive(httpResponse, request.shouldKeepAlive());
-        }
-    }
-
-    private void shouldClose(ChannelHandlerContext ctx) {
-        if (shouldClose()) {
-            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        } else {
-            ctx.flush();
-        }
-    }
-
-    private boolean shouldClose() {
-        return !request.shouldKeepAlive();
-    }
-
-    private void fullResponse(final ChannelHandlerContext ctx, final SimpleResponse response) throws IOException {
-        final long contentLength = lengthOfStream(getTokenReplaceStream(response));
-        scheduledExecutorService.schedule((Runnable)() -> {
-            DefaultHttpResponse httpResponse = new DefaultHttpResponse(HTTP_1_1, OK);
-            httpResponse.headers().add(HttpHeaderNames.CONTENT_LENGTH, contentLength);
-            if (response.contentType() != null) {
-                httpResponse.headers().add(HttpHeaderNames.CONTENT_TYPE, response.contentType());
-            }
-            setKeepAlive(httpResponse);
-            ctx.write(httpResponse);
-            ctx.write(new ChunkedStream(getTokenReplaceStream(response)));
-            ctx.write(new DefaultLastHttpContent());
-            shouldClose(ctx);
-        }, response.delay(), TimeUnit.MILLISECONDS);
-    }
-
-    private static long lengthOfStream(InputStream inputStream) throws IOException {
-        byte[] readBuff = new byte[1024];
-        long size = 0;
-        int numberRead;
-        while((numberRead = inputStream.read(readBuff)) != -1) {
-            size += numberRead;
-        }
-        return size;
     }
 }

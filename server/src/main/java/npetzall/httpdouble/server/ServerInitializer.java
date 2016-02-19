@@ -44,7 +44,7 @@ public class ServerInitializer extends ChannelInitializer<Channel> {
         channelPipeline.addLast("responseEncoder", new HttpResponseEncoder());
         channelPipeline.addLast(new ChunkedWriteHandler());
         //channelPipeline.addLast(new HttpContentCompressor());
-        channelPipeline.addLast(new ClientHandler(serviceDoubleRegistry, templateService, scheduledExecutorService));
+        channelPipeline.addLast("clientHandler", new ClientHandler(serviceDoubleRegistry, templateService, scheduledExecutorService));
 
     }
 }

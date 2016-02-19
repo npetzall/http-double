@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class SimpleResponseTest {
 
+    //TODO: Replace with ticker/clock
     @Test
     public void delayTest() {
         SimpleResponse response = new SimpleResponse();
