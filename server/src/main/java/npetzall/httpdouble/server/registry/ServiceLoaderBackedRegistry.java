@@ -3,12 +3,16 @@ package npetzall.httpdouble.server.registry;
 import npetzall.httpdouble.api.ServiceDouble;
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.server.service.DefaultServiceDoubleConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServiceLoaderBackedRegistry implements ServiceDoubleRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(ServiceLoaderBackedRegistry.class);
 
     private static ServiceLoader<ServiceDouble> serviceLoader = ServiceLoader.load(ServiceDouble.class);
 
@@ -23,6 +27,7 @@ public class ServiceLoaderBackedRegistry implements ServiceDoubleRegistry {
             serviceDouble.configure(serviceDoubleConfiguration);
             urlServiceDoubleMap.put(serviceDoubleConfiguration.getUrlPath(),new ServiceDoubleRef(serviceDoubleConfiguration.getServiceDoubleName(), serviceDouble));
             addTemplatesToTemplateService(serviceDoubleConfiguration);
+            log.info("Loaded: " + serviceDoubleConfiguration.getServiceDoubleName());
         });
     }
 
