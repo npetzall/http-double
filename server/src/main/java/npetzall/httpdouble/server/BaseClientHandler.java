@@ -1,5 +1,6 @@
 package npetzall.httpdouble.server;
 
+import com.codahale.metrics.Counter;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -8,17 +9,21 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedStream;
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.io.TokenReplaceStream;
+import npetzall.httpdouble.metrics.MetricsHandler;
 import npetzall.httpdouble.server.registry.ServiceDoubleRef;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 import npetzall.httpdouble.server.service.SimpleRequest;
 import npetzall.httpdouble.server.service.SimpleResponse;
+import org.slf4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_0;
@@ -36,6 +41,11 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
 
     protected ServiceDoubleRef serviceDoubleRef;
 
+    private static Counter notFoundCounter = MetricsHandler.counter(BaseClientHandler.class, "not_found");
+    private static Counter chunkedResponseCounter = MetricsHandler.counter(BaseClientHandler.class, "chunked_response");
+    private static Counter fullResponseCounter = MetricsHandler.counter(BaseClientHandler.class, "full_response");
+    private static Counter errorCounter = MetricsHandler.counter(BaseClientHandler.class, "bubble_exceptions");
+
     public BaseClientHandler(ServiceDoubleRegistry serviceDoubleRegistry,
                          TemplateService templateService,
                          ScheduledExecutorService scheduledExecutorService) {
@@ -52,6 +62,7 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
     protected static void notFound(ChannelHandlerContext ctx) {
         ctx.writeAndFlush(new DefaultFullHttpResponse(HTTP_1_0, NOT_FOUND))
                 .addListener(ChannelFutureListener.CLOSE);
+        notFoundCounter.inc();
     }
 
     protected static void addHeadersToRequest(HttpHeaders httpHeaders, SimpleRequest request) {
@@ -70,6 +81,7 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
             HttpChunkedInput httpChunkedInput = new HttpChunkedInput(new ChunkedStream(new TokenReplaceStream(response.getTokens(), templateService.get(serviceDoubleRef.getName(), response.templateName()))));
             ctx.write(httpChunkedInput);
             shouldClose(ctx,request);
+            chunkedResponseCounter.inc();
         }, response.delay(), TimeUnit.MILLISECONDS);
     }
 
@@ -106,6 +118,7 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
             setKeepAlive(httpResponse, request);
             ctx.write(httpResponse);
             shouldClose(ctx, request);
+            fullResponseCounter.inc();
         }, response.delay(), TimeUnit.MILLISECONDS);
     }
 
@@ -119,7 +132,21 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
         return byteArrayOutputStream.toByteArray();
     }
 
-    protected static String getRemoteAddress(ChannelHandlerContext ctx) {
+    protected static void handleException(Logger log, ChannelHandlerContext ctx, Exception e) {
+        log.error("Faild on request from: " + getRemoteAddress(ctx), e);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        e.printStackTrace(new PrintStream(byteArrayOutputStream));
+        DefaultFullHttpResponse response = new DefaultFullHttpResponse(
+                HTTP_1_1,
+                INTERNAL_SERVER_ERROR,
+                Unpooled.wrappedBuffer(byteArrayOutputStream.toByteArray()));
+        response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
+        ctx.writeAndFlush(response)
+                .addListener(ChannelFutureListener.CLOSE);
+        errorCounter.inc();
+    }
+
+    private static String getRemoteAddress(ChannelHandlerContext ctx) {
         if (ctx != null && ctx.channel() != null && ctx.channel().remoteAddress() != null) {
             return ctx.channel().remoteAddress().toString();
         }
