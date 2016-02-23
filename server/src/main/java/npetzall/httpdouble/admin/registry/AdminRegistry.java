@@ -23,9 +23,7 @@ public class AdminRegistry {
     private AdminRegistry() {
         registry.put("/", index);
         log.info("Loaded: Index");
-        serviceLoaderAdminService.iterator().forEachRemaining(adminService -> {
-            register(adminService.getName(), adminService.getPath(), adminService);
-        });
+        serviceLoaderAdminService.iterator().forEachRemaining(adminService ->  register(adminService.getName(), adminService.getPath(), adminService));
     }
 
     public static AdminRegistry getInstance() {

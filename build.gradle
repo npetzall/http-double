@@ -24,10 +24,18 @@ subprojects {
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
 
-  jar.appendix jar.baseName
+  jar.appendix project.name
   jar.baseName "http-double"
+
+  task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+  }
+
+  sourceJar.appendix project.name
+  sourceJar.baseName "http-double"
+
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.10'
+    gradleVersion = '2.11'
 }

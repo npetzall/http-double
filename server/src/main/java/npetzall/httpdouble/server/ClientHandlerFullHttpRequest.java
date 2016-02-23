@@ -2,7 +2,6 @@ package npetzall.httpdouble.server;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Meter;
-import com.codahale.metrics.Timer;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -53,22 +52,7 @@ public class ClientHandlerFullHttpRequest extends BaseClientHandler<FullHttpRequ
             if (fullHttpRequest.content().isReadable()) {
                 request.body(new ByteBufInputStream(fullHttpRequest.content()));
             }
-            final Timer.Context timer = MetricsHandler.timer(serviceDoubleRef.getServiceDouble().getClass(), "processTimer").time();
-            try {
-                serviceDoubleRef.getServiceDouble().processRequest(request, response);
-            } finally {
-                timer.stop();
-            }
-            if (response.templateName() == null || response.templateName().isEmpty()) {
-                notFound(ctx);
-                return;
-            } else {
-                if (response.sendChunkedResponse()) {
-                    chunkedResponse(ctx, response);
-                } else {
-                    fullResponse(ctx, response);
-                }
-            }
+            sendResponse(ctx);
         } catch (Exception e) {
             handleException(log, ctx, e);
         }

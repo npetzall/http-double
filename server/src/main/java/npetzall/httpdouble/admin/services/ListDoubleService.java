@@ -20,7 +20,10 @@ public class ListDoubleService implements AdminService {
         this.registry = registry;
     }
 
+    @Override
     public String getName() { return "DoubleServiceList"; }
+
+    @Override
     public String getPath() { return "/servicedoubles"; }
 
     @Override

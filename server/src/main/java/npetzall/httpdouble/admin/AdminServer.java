@@ -1,25 +1,19 @@
 package npetzall.httpdouble.admin;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import npetzall.httpdouble.server.BaseServer;
 
-public class AdminServer {
+public class AdminServer extends BaseServer {
 
     private int port = 3010;
-
-    private boolean running = false;
-
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
-    private Channel channel;
 
     public void setPort(int port) {
         this.port = port;
     }
 
+    @Override
     public void start() {
         if (isStopped()) {
             try {
@@ -38,27 +32,4 @@ public class AdminServer {
             }
         }
     }
-
-    private boolean isStopped() {
-        return !running;
-    }
-
-    public void stop() {
-        if (running) {
-            try {
-                channel.close();
-                channel.closeFuture().sync();
-                channel = null;
-            } catch (InterruptedException e) {
-                //nothing
-            } finally {
-                bossGroup.shutdownGracefully();
-                bossGroup = null;
-                workerGroup.shutdownGracefully();
-                workerGroup = null;
-            }
-            running = false;
-        }
-    }
-
 }

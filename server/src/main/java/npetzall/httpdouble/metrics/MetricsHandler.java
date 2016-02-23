@@ -29,6 +29,8 @@ public class MetricsHandler {
                 .build();
     }
 
+    private MetricsHandler() {}
+
     public static void startLoggingToSLF4J(long period, TimeUnit unit) {
         slf4jReporter.start(period, unit);
     }

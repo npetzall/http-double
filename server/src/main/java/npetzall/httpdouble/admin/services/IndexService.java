@@ -14,10 +14,12 @@ import java.util.Map;
 
 public class IndexService implements AdminService {
 
+    @Override
     public String getName() {
         return "Index";
     }
 
+    @Override
     public String getPath() {
         return "/";
     }

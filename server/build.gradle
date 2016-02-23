@@ -51,10 +51,6 @@ jmh {
     jmhVersion = '1.11.3'
 }
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
-}
-
 publishing {
     publications {
         httpdouble(MavenPublication) {
@@ -64,13 +60,18 @@ publishing {
             artifact sourceJar {
                 classifier "sources"
             }
+
+            artifact distTar {
+                classifier "dist"
+                extension "tar"
+            }
         }
     }
 }
 
 bintray {
-    user = bintrayUser
-    key = bintrayKey
+    user = project.getProperties().get("bintrayUser")
+    key = project.getProperties().get("bintrayKey")
     publications = ['httpdouble']
     pkg {
         repo = 'maven'

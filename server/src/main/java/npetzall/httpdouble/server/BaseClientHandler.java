@@ -1,6 +1,7 @@
 package npetzall.httpdouble.server;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Timer;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -67,6 +68,25 @@ public abstract class BaseClientHandler<T> extends SimpleChannelInboundHandler<T
 
     protected static void addHeadersToRequest(HttpHeaders httpHeaders, SimpleRequest request) {
         httpHeaders.forEach(entry -> request.addHeader(entry.getKey(), entry.getValue()));
+    }
+
+    protected void sendResponse(final ChannelHandlerContext ctx) throws IOException {
+        final Timer.Context timer = MetricsHandler.timer(serviceDoubleRef.getServiceDouble().getClass(), "processTimer").time();
+        try {
+            serviceDoubleRef.getServiceDouble().processRequest(request, response);
+        } finally {
+            timer.stop();
+        }
+        if (response.templateName() == null || response.templateName().isEmpty()) {
+            notFound(ctx);
+            return;
+        } else {
+            if (response.sendChunkedResponse()) {
+                chunkedResponse(ctx, response);
+            } else {
+                fullResponse(ctx, response);
+            }
+        }
     }
 
     protected void chunkedResponse(final ChannelHandlerContext ctx, final SimpleResponse response) {

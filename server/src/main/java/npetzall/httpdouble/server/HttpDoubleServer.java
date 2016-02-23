@@ -1,8 +1,6 @@
 package npetzall.httpdouble.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
@@ -14,7 +12,7 @@ import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class HttpDoubleServer {
+public class HttpDoubleServer extends BaseServer {
 
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -24,12 +22,6 @@ public class HttpDoubleServer {
     private int usePort = 3000;
     private boolean useSSL = false;
     private int numberOfSchedulerThreads = 100;
-
-    private boolean running = false;
-
-    private EventLoopGroup bossGroup;
-    private EventLoopGroup workerGroup;
-    private Channel channel;
 
     public void setTemplateService(TemplateService templateService) {
         this.templateService = templateService;
@@ -51,6 +43,7 @@ public class HttpDoubleServer {
         this.numberOfSchedulerThreads = numberOfSchedulerThreads;
     }
 
+    @Override
     public void start() {
         validate();
         scheduledExecutorService = Executors.newScheduledThreadPool(numberOfSchedulerThreads);
@@ -85,27 +78,12 @@ public class HttpDoubleServer {
         }
     }
 
-    private boolean isStopped() {
-        return !running;
-    }
-
+    @Override
     public void stop() {
         if (running) {
-            try {
-                channel.close();
-                channel.closeFuture().sync();
-                channel = null;
-            } catch (InterruptedException e) {
-                //nothing
-            } finally {
-                bossGroup.shutdownGracefully();
-                bossGroup = null;
-                workerGroup.shutdownGracefully();
-                workerGroup = null;
-            }
+            super.stop();
             scheduledExecutorService.shutdown();
             scheduledExecutorService = null;
-            running = false;
         }
     }
 

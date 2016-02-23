@@ -42,7 +42,7 @@ public class MetricsService implements AdminService {
         String type = getParameter(queryStringDecoder, "type");
         String name = getParameter(queryStringDecoder, "name");
 
-        Object dataAsObject = filter(MetricsHandler.registry(), type, name);
+        Object dataAsObject = filter(type, name);
         byte[] dataAsBytes = new byte[0];
         try {
             dataAsBytes = getWriter(queryStringDecoder).writeValueAsBytes(dataAsObject);
@@ -65,27 +65,39 @@ public class MetricsService implements AdminService {
         }
     }
 
-    private Object filter(MetricRegistry metricRegistry, String type, String name) {
-        boolean filterByType = type != null && !type.isEmpty();
-        boolean filterByName = name != null && !name.isEmpty();
-
-        if (filterByName) {
+    private Object filter(String type, String name) {
+        MetricRegistry metricRegistry = MetricsHandler.registry();
+        if (shouldFilterByName(name)) {
             return metricRegistry.getMetrics().get(name);
         }
-
-        if (filterByType) {
-            if ("gauges".equals(type)) {
-                return metricRegistry.getGauges();
-            } else if ("counters".equals(type)) {
-                return metricRegistry.getCounters();
-            } else if ("histograms".equals(type)) {
-                return metricRegistry.getHistograms();
-            } else if ("meters".equals(type)) {
-                return metricRegistry.getMeters();
-            }
+        if (shouldFilterByType(type)) {
+            filterByType(type);
         }
-
         return metricRegistry;
+    }
+
+    private boolean shouldFilterByName(String name) {
+        return name != null && !name.isEmpty();
+    }
+
+    private boolean shouldFilterByType(String type) {
+        return type != null && !type.isEmpty();
+    }
+
+    private Object filterByType(String type) {
+        MetricRegistry metricRegistry = MetricsHandler.registry();
+        switch (type) {
+            case "gauges":
+                return metricRegistry.getGauges();
+            case "counters":
+                return metricRegistry.getCounters();
+            case "histograms":
+                return metricRegistry.getHistograms();
+            case "meters":
+                return metricRegistry.getMeters();
+            default:
+                return metricRegistry;
+        }
     }
 
     private ObjectWriter getWriter(QueryStringDecoder queryStringDecoder) {
