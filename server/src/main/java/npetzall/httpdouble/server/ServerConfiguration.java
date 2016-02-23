@@ -11,6 +11,12 @@ public class ServerConfiguration {
     @Option(name="--port", usage="Specify port")
     int usePort = 3000;
 
+    @Option(name="--admin-port", usage="Specifies the admin port")
+    int adminPort = -1;
+
+    @Option(name="--disable-admin", usage="Disable the admin side-kick")
+    boolean disableAdmin = false;
+
     @Option(name="--ssl", usage="Enabled ssl")
     boolean useSSL = false;
 

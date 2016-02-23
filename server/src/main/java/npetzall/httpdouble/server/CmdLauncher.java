@@ -1,5 +1,8 @@
 package npetzall.httpdouble.server;
 
+import npetzall.httpdouble.admin.AdminServer;
+import npetzall.httpdouble.admin.registry.AdminRegistry;
+import npetzall.httpdouble.admin.services.ListDoubleService;
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 import npetzall.httpdouble.server.registry.ServiceLoaderBackedRegistry;
@@ -19,6 +22,9 @@ public class CmdLauncher {
 
     public static void main(String[] args) throws IOException {
         ServerConfiguration serverConfiguration = new ServerConfiguration();
+        TemplateService templateService = new OffHeapTemplateRepo();
+        ServiceDoubleRegistry serviceDoubleRegistry = new ServiceLoaderBackedRegistry(templateService);
+
         CmdLineParser parser = new CmdLineParser(serverConfiguration);
         try {
             parser.parseArgument(args);
@@ -31,17 +37,28 @@ public class CmdLauncher {
         httpDoubleServer.setUsePort(serverConfiguration.usePort);
         httpDoubleServer.setUseSSL(serverConfiguration.useSSL);
         httpDoubleServer.setNumberOfSchedulerThreads(serverConfiguration.numberOfSchedulerThreads);
-        TemplateService templateService = new OffHeapTemplateRepo();
-        ServiceDoubleRegistry serviceDoubleRegistry = new ServiceLoaderBackedRegistry(templateService);
         httpDoubleServer.setTemplateService(templateService);
         httpDoubleServer.setServiceDoubleRegistry(serviceDoubleRegistry);
         httpDoubleServer.start();
+        if(!serverConfiguration.disableAdmin) {
+            ListDoubleService listDoubleService = new ListDoubleService(serviceDoubleRegistry);
+            AdminRegistry.getInstance().register(listDoubleService.getName(), listDoubleService.getPath(), listDoubleService);
+        }
         log.info("Using port: "+ serverConfiguration.usePort);
         log.info("Using ssl: " + serverConfiguration.useSSL);
         log.info("Number of threads for delay: " + serverConfiguration.numberOfSchedulerThreads);
+        AdminServer adminServer = new AdminServer();
+        log.info("Admin is disable: " + serverConfiguration.disableAdmin);
+        if(!serverConfiguration.disableAdmin) {
+            int adminPort = serverConfiguration.adminPort < 0 ? serverConfiguration.usePort + 10 : serverConfiguration.adminPort;
+            adminServer.setPort(adminPort);
+            adminServer.start();
+            log.info("Admin is using port: " + adminPort);
+        }
         log.info("Press Enter to stop");
         System.in.read();
         httpDoubleServer.stop();
+        adminServer.stop();
 
     }
 }

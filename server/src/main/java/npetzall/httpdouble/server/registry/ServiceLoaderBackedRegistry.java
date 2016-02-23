@@ -6,6 +6,7 @@ import npetzall.httpdouble.server.service.DefaultServiceDoubleConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,5 +42,10 @@ public class ServiceLoaderBackedRegistry implements ServiceDoubleRegistry {
     @Override
     public ServiceDoubleRef getServiceDoubleByURLPath(String urlPath) {
         return urlServiceDoubleMap.get(urlPath);
+    }
+
+    @Override
+    public Map<String,ServiceDoubleRef> getAllServiceDoubles() {
+        return Collections.unmodifiableMap(urlServiceDoubleMap);
     }
 }

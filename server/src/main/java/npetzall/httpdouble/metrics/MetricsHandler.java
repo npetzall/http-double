@@ -27,7 +27,18 @@ public class MetricsHandler {
                 .convertRatesTo(TimeUnit.SECONDS)
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
-        slf4jReporter.start(1, TimeUnit.MINUTES);
+    }
+
+    public static void startLoggingToSLF4J(long period, TimeUnit unit) {
+        slf4jReporter.start(period, unit);
+    }
+
+    public static void stopLoggingToSLF4J() {
+        slf4jReporter.stop();
+    }
+
+    public static MetricRegistry registry() {
+        return metricRegistry;
     }
 
     public static Timer timer(Class clazz, String name) {

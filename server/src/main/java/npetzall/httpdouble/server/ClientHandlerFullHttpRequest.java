@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpUtil;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.metrics.MetricsHandler;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
@@ -38,13 +39,13 @@ public class ClientHandlerFullHttpRequest extends BaseClientHandler<FullHttpRequ
             requestCounter.inc();
             request = new SimpleRequest();
             response = new SimpleResponse();
-            serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(fullHttpRequest.uri());
+            request.queryStringDecoder(new QueryStringDecoder(fullHttpRequest.uri()));
+            serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(request.path());
             if (serviceDoubleRef == null) {
                 notFound(ctx);
                 return;
             }
             request.shouldKeepAlive(HttpUtil.isKeepAlive(fullHttpRequest));
-            request.path(fullHttpRequest.uri());
             request.method(fullHttpRequest.method().name());
             addHeadersToRequest(fullHttpRequest.headers(), request);
             addHeadersToRequest(fullHttpRequest.trailingHeaders(), request);

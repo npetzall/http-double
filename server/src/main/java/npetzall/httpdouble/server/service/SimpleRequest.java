@@ -1,5 +1,6 @@
 package npetzall.httpdouble.server.service;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import npetzall.httpdouble.api.Request;
 
 import java.io.InputStream;
@@ -10,7 +11,7 @@ public class SimpleRequest implements Request {
 
     private boolean keepAlive;
 
-    private String path;
+    private QueryStringDecoder queryStringDecoder;
     private String method;
     private Map<String,String> headers = new HashMap<>();
     private InputStream bodyStream = null;
@@ -23,14 +24,14 @@ public class SimpleRequest implements Request {
         return keepAlive;
     }
 
-    public SimpleRequest path(String path) {
-        this.path = path;
+    public SimpleRequest queryStringDecoder(QueryStringDecoder queryStringDecoder) {
+        this.queryStringDecoder = queryStringDecoder;
         return this;
     }
 
     @Override
     public String path() {
-        return path;
+        return queryStringDecoder.path();
     }
 
     public SimpleRequest method(String method) {

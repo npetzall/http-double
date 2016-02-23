@@ -8,7 +8,7 @@ apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-version '0.0.6'
+version '0.0.7'
 
 applicationName = 'http-double'
 mainClassName = "npetzall.httpdouble.server.CmdLauncher"
@@ -23,6 +23,7 @@ dependencies {
     compile 'args4j:args4j:2.33'
     compile 'io.dropwizard.metrics:metrics-core:3.1.2'
     compile 'io.dropwizard.metrics:metrics-jvm:3.1.2'
+    compile 'io.dropwizard.metrics:metrics-json:3.1.2'
     runtime 'org.apache.logging.log4j:log4j-core:2.5'
     runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.5'
     testCompile 'org.testng:testng:6.9.9'

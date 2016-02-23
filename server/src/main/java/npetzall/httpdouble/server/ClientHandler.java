@@ -56,13 +56,13 @@ public class ClientHandler extends BaseClientHandler<HttpObject> {
             request = new SimpleRequest();
             response = new SimpleResponse();
             HttpRequest httpRequest = (HttpRequest)msg;
-            serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(httpRequest.uri());
+            request.queryStringDecoder(new QueryStringDecoder(httpRequest.uri()));
+            serviceDoubleRef = serviceDoubleRegistry.getServiceDoubleByURLPath(request.path());
             if (serviceDoubleRef == null) {
                 notFound(ctx);
                return;
             }
             request.shouldKeepAlive(HttpUtil.isKeepAlive(httpRequest));
-            request.path(httpRequest.uri());
             request.method(httpRequest.method().name());
             addHeadersToRequest(httpRequest.headers(), request);
             if (HttpUtil.is100ContinueExpected(httpRequest)) {
