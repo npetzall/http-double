@@ -3,7 +3,7 @@ package npetzall.httpdouble.admin;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import npetzall.httpdouble.server.BaseServer;
+import npetzall.httpdouble.BaseServer;
 
 public class AdminServer extends BaseServer {
 

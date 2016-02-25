@@ -1,4 +1,4 @@
-package npetzall.httpdouble.server;
+package npetzall.httpdouble;
 
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;

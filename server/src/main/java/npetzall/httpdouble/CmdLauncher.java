@@ -1,9 +1,10 @@
-package npetzall.httpdouble.server;
+package npetzall.httpdouble;
 
 import npetzall.httpdouble.admin.AdminServer;
 import npetzall.httpdouble.admin.registry.AdminRegistry;
 import npetzall.httpdouble.admin.services.ListDoubleService;
 import npetzall.httpdouble.api.TemplateService;
+import npetzall.httpdouble.server.HttpDoubleServer;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 import npetzall.httpdouble.server.registry.ServiceLoaderBackedRegistry;
 import npetzall.httpdouble.template.OffHeapTemplateRepo;

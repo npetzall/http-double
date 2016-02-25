@@ -6,6 +6,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import npetzall.httpdouble.BaseServer;
 import npetzall.httpdouble.api.TemplateService;
 import npetzall.httpdouble.server.registry.ServiceDoubleRegistry;
 

@@ -1,4 +1,4 @@
-package npetzall.httpdouble.at;
+package npetzall.httpdouble.at.server;
 
 import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;

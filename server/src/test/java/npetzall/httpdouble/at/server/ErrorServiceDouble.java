@@ -1,4 +1,4 @@
-package npetzall.httpdouble.at;
+package npetzall.httpdouble.at.server;
 
 import npetzall.httpdouble.api.Request;
 import npetzall.httpdouble.api.Response;

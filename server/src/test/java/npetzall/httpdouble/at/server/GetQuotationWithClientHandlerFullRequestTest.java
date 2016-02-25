@@ -1,10 +1,11 @@
-package npetzall.httpdouble.at;
+package npetzall.httpdouble.at.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.EmptyByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.handler.codec.http.*;
+import npetzall.httpdouble.server.ClientHandlerFullHttpRequest;
 import npetzall.httpdouble.server.ServerInitializer;
 import npetzall.httpdouble.server.registry.ServiceLoaderBackedRegistry;
 import npetzall.httpdouble.template.OffHeapTemplateRepo;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
-public class GetQuotationWithClientHandlerTest {
+public class GetQuotationWithClientHandlerFullRequestTest {
 
     private EmbeddedChannel createEmbeddedChannel(ScheduledExecutorService scheduledExecutorService) {
         OffHeapTemplateRepo offHeapTemplateRepo = new OffHeapTemplateRepo();
@@ -28,6 +29,7 @@ public class GetQuotationWithClientHandlerTest {
         ServerInitializer serverInitializer = new ServerInitializer(null, serviceLoaderBackedRegistry, offHeapTemplateRepo, scheduledExecutorService);
         EmbeddedChannel embeddedChannel = new EmbeddedChannel(serverInitializer);
         embeddedChannel.pipeline().remove("responseEncoder");
+        embeddedChannel.pipeline().replace("clientHandler", "clientHandlerFullRequest", new ClientHandlerFullHttpRequest(serviceLoaderBackedRegistry, offHeapTemplateRepo, scheduledExecutorService));
         return embeddedChannel;
     }
 
@@ -35,7 +37,6 @@ public class GetQuotationWithClientHandlerTest {
     public void fullRequestChunkedResponse() throws InterruptedException {
         ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
         EmbeddedChannel embeddedChannel = createEmbeddedChannel(scheduledExecutorService);
-
         DefaultFullHttpRequest fullHttpRequest = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.POST, "/singleValue", Unpooled.wrappedBuffer("Npetzall".getBytes()));
         fullHttpRequest.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
         embeddedChannel.writeInbound(fullHttpRequest);

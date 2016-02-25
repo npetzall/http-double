@@ -1,4 +1,4 @@
-package npetzall.httpdouble.server;
+package npetzall.httpdouble;
 
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
