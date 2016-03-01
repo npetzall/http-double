@@ -1,0 +1,55 @@
+plugins {
+    id "com.jfrog.bintray" version "1.6"
+}
+
+version '0.0.1'
+
+apply plugin: 'application'
+apply plugin: 'jacoco'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+applicationName = 'http-double'
+mainClassName = "npetzall.httpdouble.CmdLauncher"
+startScripts.unixStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.sh.txt"))
+startScripts.windowsStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.bat.txt"))
+
+
+dependencies {
+    compile project(':server')
+    compile 'args4j:args4j:2.33'
+}
+
+publishing {
+    publications {
+        httpdouble(MavenPublication) {
+            from components.java
+            artifactId 'http-double-server-standalone'
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+
+            artifact distTar {
+                classifier "dist"
+                extension "tar"
+            }
+        }
+    }
+}
+
+bintray {
+    user = project.getProperties().get("bintrayUser")
+    key = project.getProperties().get("bintrayKey")
+    publications = ['httpdouble']
+    pkg {
+        repo = 'maven'
+        name = 'http-double'
+        desc = 'The base server'
+        licenses = ['MIT']
+        websiteUrl = 'https://github.com/npetzall/http-double'
+        issueTrackerUrl = 'https://github.com/npetzall/http-double/issues'
+        vcsUrl = 'https://github.com/npetzall/http-double.git'
+        githubRepo = 'npetzall/http-double'
+    }
+}

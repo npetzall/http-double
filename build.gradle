@@ -19,7 +19,6 @@ allprojects {
 
 subprojects {
   apply plugin: 'java'
-  apply plugin: 'osgi'
 
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
@@ -33,6 +32,12 @@ subprojects {
 
   sourceJar.appendix project.name
   sourceJar.baseName "http-double"
+
+  dependencies {
+    testCompile 'org.testng:testng:6.9.9'
+    testCompile 'org.assertj:assertj-core:3.1.0'
+    testRuntime 'org.codehaus.sonar-plugins.java:sonar-jacoco-listeners:3.2'
+  }
 
 }
 

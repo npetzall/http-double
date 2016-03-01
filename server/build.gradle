@@ -3,24 +3,18 @@ plugins {
     id "com.jfrog.bintray" version "1.6"
 }
 
+apply plugin: 'osgi'
 apply plugin: 'jacoco'
-apply plugin: 'application'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-version '0.0.7'
-
-applicationName = 'http-double'
-mainClassName = "npetzall.httpdouble.CmdLauncher"
-startScripts.unixStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.sh.txt"))
-startScripts.windowsStartScriptGenerator.template = resources.text.fromFile(file(project.projectDir.absolutePath + "/startscripts/http-double.bat.txt"))
+version '0.0.8'
 
 dependencies {
     compile project(':api')
     compile 'io.netty:netty-codec-http:4.1.0.Beta8'
     compile 'io.netty:netty-handler:4.1.0.Beta8'
     compile 'org.slf4j:slf4j-api:1.7.13'
-    compile 'args4j:args4j:2.33'
     compile 'io.dropwizard.metrics:metrics-core:3.1.2'
     compile 'io.dropwizard.metrics:metrics-jvm:3.1.2'
     compile 'io.dropwizard.metrics:metrics-json:3.1.2'
@@ -59,11 +53,6 @@ publishing {
 
             artifact sourceJar {
                 classifier "sources"
-            }
-
-            artifact distTar {
-                classifier "dist"
-                extension "tar"
             }
         }
     }
